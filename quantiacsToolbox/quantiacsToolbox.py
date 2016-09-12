@@ -56,8 +56,8 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
 
     nMarkets = len(marketList)
 
-    if sys.version[:5] is '2.7.9':
-        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+
+
 
     # set up data director
     if not os.path.isdir(dataDir):
@@ -69,7 +69,8 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
         # check to see if market data is present. If not (or refresh is true), download data from quantiacs.
         if not os.path.isfile(path) or refresh:
             try:
-                if sys.version[:5] is '2.7.9':
+                if False: #sys.version_info > (2,7,9):
+                    gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
                     data = urllib.urlopen('https://www.quantiacs.com/data/' +
                                           marketList[j]+'.txt',
                                           context=gcontext).read()
@@ -302,8 +303,7 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
 
     sessionReturnTemp = np.append( np.empty((1,nMarkets))*np.nan,(( dataDict['CLOSE'][1:,:]- dataDict['OPEN'][1:,:]) / dataDict['CLOSE'][0:-1,:] ), axis =0 ).copy()
     sessionReturn=np.nan_to_num( fillnans(sessionReturnTemp) )
-
-    gapsTemp=np.append(np.empty((1,nMarkets))*np.nan, (dataDict['OPEN'][1:,:]- dataDict['CLOSE'][:-1,:]-dataDict['RINFO'][1:,:].astype(float)) / dataDict['CLOSE'][:-1.:],axis=0)
+    gapsTemp=np.append(np.empty((1,nMarkets))*np.nan, (dataDict['OPEN'][1:,:]- dataDict['CLOSE'][:-1,:]-dataDict['RINFO'][1:,:].astype(float)) / dataDict['CLOSE'][:-1:],axis=0)
     gaps=np.nan_to_num(fillnans(gapsTemp))
 
     slippageTemp = np.append(np.empty((1,nMarkets))*np.nan, ((dataDict['HIGH'][1:,:] - dataDict['LOW'][1:,:]) / dataDict['CLOSE'][:-1,:] ), axis=0) * settings['slippage']
@@ -878,7 +878,7 @@ def submit(tradingSystem, tsName):
     fileText=fid.read()
     fid.close()
 
-    if sys.version[:5]=='2.7.9' or sys.version[:6] == '2.7.10':
+    if sys.version_info > (2,7,9):
         uploadContext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
         submissionUrl='https://www.quantiacs.com/quantnetsite/UploadTradingSystem.aspx'
         data=urllib.urlencode({'fileName':fileName[:-3],'name':tsName,'data':fileText, 'version':__version__})
@@ -892,7 +892,6 @@ def submit(tradingSystem, tsName):
 
 
     successPage = guid.read()
-
 
     webbrowser.open_new_tab('https://www.quantiacs.com/quantnetsite/UploadSuccess.aspx?guid='+str(successPage))
 
@@ -1014,7 +1013,7 @@ def updateCheck():
         returns False if version is the same
     '''
 
-    from .version import __version__
+    from version import __version__
     updateStr = ''
     try:
         toolboxJson = urllib.urlopen('https://pypi.python.org/pypi/quantiacsToolbox/json')
