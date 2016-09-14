@@ -56,9 +56,6 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
 
     nMarkets = len(marketList)
 
-
-
-
     # set up data director
     if not os.path.isdir(dataDir):
         os.mkdir(dataDir)
@@ -197,7 +194,6 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
 
     errorlog=[]
     ret={}
-
 
     if type(tradingSystem) is str:
         tradingSystem = tradingSystem.replace('\\', '/')
@@ -389,9 +385,9 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
 
         t1=time.time()
         runtime = t1-t0
-        if runtime >300:
+        if runtime > 300 and state['runtimeInterrupt']:
             errorlog.append('Evaluation stopped: Runtime exceeds 5 minutes.')
-            return
+            break
 
     if 'budget' in settings:
         fundequity = dataDict['fundEquity'][(settings['lookback']-1):,:] * settings['budget']
@@ -408,6 +404,9 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
 
     ret['returns'] = np.nan_to_num(returns).tolist()
 
+    if errorlog:
+	    print 'Error: {}'.format(errorlog)
+
     if plotEquity:
         statistics = stats(fundequity)
 
@@ -415,6 +414,7 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
 
     else:
         statistics= stats(fundequity)
+
 
     ret['tsName']=tsName
     ret['fundDate']=dataDict['DATE'].tolist()
