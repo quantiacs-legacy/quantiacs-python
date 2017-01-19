@@ -300,7 +300,7 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
     gaps=np.nan_to_num(fillnans(gapsTemp))
 
     # check if a default slippage is specified
-    if True == os.environ.has_key('default_slippage') or False == settings.has_key('slippage'):
+    if False == settings.has_key('slippage'):
         settings['slippage'] = 0.05
 
     slippageTemp = np.append(np.empty((1,nMarkets))*np.nan, ((dataDict['HIGH'][1:,:] - dataDict['LOW'][1:,:]) / dataDict['CLOSE'][:-1,:] ), axis=0) * settings['slippage']
