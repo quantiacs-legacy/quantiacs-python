@@ -49,8 +49,7 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
         return
 
     dataToLoad = set(dataToLoad)
-    requiredData = set(['DATE', 'OPEN', 'HIGH', 'LOW', 'CLOSE', 'P', 'RINFO',
-                        'p'])
+    requiredData = set(['DATE', 'OPEN', 'HIGH', 'LOW', 'CLOSE', 'P', 'RINFO', 'p'])
 
     dataToLoad.update(requiredData)
 
@@ -289,8 +288,6 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
         dataDict['RINFO'] = np.zeros(np.shape(dataDict['CLOSE']))
         Rix = np.zeros(np.shape(dataDict['CLOSE']))
 
-
-
     dataDict['exposure']=np.zeros((endLoop,nMarkets))
     dataDict['equity']=np.ones((endLoop,nMarkets))
     dataDict['fundEquity'] = np.ones((endLoop,1))
@@ -301,6 +298,10 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
     sessionReturn=np.nan_to_num( fillnans(sessionReturnTemp) )
     gapsTemp=np.append(np.empty((1,nMarkets))*np.nan, (dataDict['OPEN'][1:,:]- dataDict['CLOSE'][:-1,:]-dataDict['RINFO'][1:,:].astype(float)) / dataDict['CLOSE'][:-1:],axis=0)
     gaps=np.nan_to_num(fillnans(gapsTemp))
+
+    # check if a default slippage is specified
+    if True == os.environ.has_key('default_slippage') or False == settings.has_key('slippage'):
+        settings['slippage'] = 0.05
 
     slippageTemp = np.append(np.empty((1,nMarkets))*np.nan, ((dataDict['HIGH'][1:,:] - dataDict['LOW'][1:,:]) / dataDict['CLOSE'][:-1,:] ), axis=0) * settings['slippage']
     SLIPPAGE = np.nan_to_num(fillnans(slippageTemp))
@@ -454,7 +455,13 @@ def plotts(tradingSystem, equity,mEquity,exposure,settings,DATE,statistics,retur
     indx_TradingPerf = 0
     indx_Exposure = 0
     indx_MarketRet = 0
-    mRetMarkets = settings['markets'][1:]
+#    mRetMarkets = settings['markets'][1:]
+    mRetMarkets = list(settings['markets'])
+    try:
+        mRetMarkets.remove('CASH')
+    except:
+        pass
+
     settings['markets'].insert(0,'fundEquity')
 
     DATEord=[]
@@ -579,9 +586,9 @@ def plotts(tradingSystem, equity,mEquity,exposure,settings,DATE,statistics,retur
         t = np.array(DATEord)
 
         if indx_Exposure == 2:
-            mRet = np.cumprod(1-marketRet[indx_MarketRet+1])
+            mRet = np.cumprod(1-marketRet[indx_MarketRet])
         else:
-            mRet = np.cumprod(1+marketRet[indx_MarketRet+1])
+            mRet = np.cumprod(1+marketRet[indx_MarketRet])
 
         MarketReturns.plot(t,mRet,'b',linewidth=0.5)
         statistics=stats(mRet)
