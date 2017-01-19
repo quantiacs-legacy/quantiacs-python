@@ -303,9 +303,6 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
     if False == settings.has_key('slippage'):
         settings['slippage'] = 0.05
 
-    # for production slippage is always set to 0.05
-    settings['slippage'] = 0.05
-
     slippageTemp = np.append(np.empty((1,nMarkets))*np.nan, ((dataDict['HIGH'][1:,:] - dataDict['LOW'][1:,:]) / dataDict['CLOSE'][:-1,:] ), axis=0) * settings['slippage']
     SLIPPAGE = np.nan_to_num(fillnans(slippageTemp))
 #    gaps[Rix] = 0
