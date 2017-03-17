@@ -50,6 +50,7 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
 
     dataToLoad = set(dataToLoad)
     requiredData = set(['DATE', 'OPEN', 'HIGH', 'LOW', 'CLOSE', 'P', 'RINFO', 'p'])
+    fieldNames = set()
 
     dataToLoad.update(requiredData)
 
@@ -92,10 +93,11 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
 
     # Loading all markets into memory.
     for index, market in enumerate(marketList):
-        marketFile = os.path.join('tickerData',market+'.txt')
+        marketFile = os.path.join('tickerData', market+'.txt')
         data = pd.read_csv(marketFile,engine='c')
         data.columns = map(str.strip,data.columns)
-        data.set_index('DATE', inplace = True)
+        fieldNames.update(list(data.columns.values))
+        data.set_index('DATE', inplace=True)
         data['DATE'] = data.index
 
         for index, dataType in enumerate(dataToLoad):
@@ -103,7 +105,7 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
                 data.rename(columns={'p':'P'},inplace = True)
                 dataType = 'P'
 
-            if dataType != 'DATE' and not dataType in dataDict and dataType in data:
+            if dataType != 'DATE' and dataType not in dataDict and dataType in data:
                 dataDict[dataType] = pd.DataFrame(index=DATE_Large,columns=marketList)
                 dataDict[dataType][market] = data[dataType]
 
@@ -111,6 +113,25 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
                 dataDict[dataType][market] = data[dataType]
 
     dataDict['CLOSE'].dropna(how='all', inplace=True)
+
+    # get args that are not in requiredData and fieldsNames
+    # find out what has not been loaded
+    additionDataToLoad = dataToLoad.difference(requiredData.union(fieldNames))
+    for i, additionData in enumerate(additionDataToLoad):
+        dataFile = os.path.join('tickerData', additionData + '.txt')
+        data = pd.read_csv(dataFile, engine='c')
+        data.columns = map(str.strip, data.columns)
+        data.set_index('DATE', inplace=True)
+        data['DATE'] = data.index
+
+        for j, column in enumerate(data.columns):
+            if column != 'DATE':
+                if additionData not in dataDict:
+                    columns = set(data.columns)
+                    columns.remove('DATE')
+                    dataDict[additionData] = pd.DataFrame(index=DATE_Large, columns=columns)
+                dataDict[additionData][column] = data[column]
+
 
     # In-sample date management.
     if beginInSample is not None:
@@ -126,8 +147,6 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
     else:
         dataDict['DATE'] = dataDict['CLOSE'].loc[beginInSampleInt:, :].index.values
 
-
-
     for index, dataType in enumerate(dataToLoad):
         if dataType != 'DATE' and dataType in dataDict:
             dataDict[dataType] = dataDict[dataType].loc[dataDict['DATE'], :]
@@ -141,13 +160,17 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
         dataDict['R'][np.isnan(dataDict['R'].astype(float))]=0.0
     if 'RINFO' in dataDict:
         dataDict['RINFO'][np.isnan(dataDict['RINFO'].astype(float))]=0.0
-        dataDict['RINFO']=dataDict['RINFO'].astype(float)
+        dataDict['RINFO'] = dataDict['RINFO'].astype(float)
     if 'P' in dataDict:
         dataDict['P'][np.isnan(dataDict['P'].astype(float))]=0.0
 
-    dataDict['CLOSE']=fillnans(dataDict['CLOSE'])
+    dataDict['CLOSE'] = fillnans(dataDict['CLOSE'])
 
     dataDict['OPEN'], dataDict['HIGH'], dataDict['LOW'] = fillwith(dataDict['OPEN'],dataDict['CLOSE']), fillwith(dataDict['HIGH'],dataDict['CLOSE']), fillwith(dataDict['LOW'],dataDict['CLOSE'])
+
+    # fill the gap for additional data as well
+    for i, additionData in enumerate(additionDataToLoad):
+        dataDict[additionData] = fillnans(dataDict[additionData])
 
     print '\bDone! \n',
     sys.stdout.flush()
