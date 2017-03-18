@@ -472,16 +472,19 @@ def plotts(tradingSystem, equity,mEquity,exposure,settings,DATE,statistics,retur
     # Initialize selected index of the two dropdown lists
     style.use("ggplot")
     global indx_TradingPerf, indx_Exposure, indx_MarketRet
+    cashOffset = 0
     inx = [0]
     inx2 = [0]
     inx3 = [0]
     indx_TradingPerf = 0
     indx_Exposure = 0
     indx_MarketRet = 0
-#    mRetMarkets = settings['markets'][1:]
+
     mRetMarkets = list(settings['markets'])
+
     try:
         mRetMarkets.remove('CASH')
+        cashOffset = 1
     except:
         pass
 
@@ -609,9 +612,9 @@ def plotts(tradingSystem, equity,mEquity,exposure,settings,DATE,statistics,retur
         t = np.array(DATEord)
 
         if indx_Exposure == 2:
-            mRet = np.cumprod(1-marketRet[indx_MarketRet])
+            mRet = np.cumprod(1-marketRet[indx_MarketRet + cashOffset])
         else:
-            mRet = np.cumprod(1+marketRet[indx_MarketRet])
+            mRet = np.cumprod(1+marketRet[indx_MarketRet + cashOffset])
 
         MarketReturns.plot(t,mRet,'b',linewidth=0.5)
         statistics=stats(mRet)
