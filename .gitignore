@@ -88,8 +88,8 @@ ENV/
 # Rope project settings
 .ropeproject
 
-# added by ebh
-./idea/*
-.idea/*
-.tickerData/*
-.sampleSystems/tickerData/*
+# pycharm project
+.idea/
+
+# market data
+*/tickerData/*
