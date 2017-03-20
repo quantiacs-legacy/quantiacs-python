@@ -50,6 +50,7 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
 
     dataToLoad = set(dataToLoad)
     requiredData = set(['DATE', 'OPEN', 'HIGH', 'LOW', 'CLOSE', 'P', 'RINFO', 'p'])
+    fieldNames = set()
 
     dataToLoad.update(requiredData)
 
@@ -91,25 +92,49 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
 
 
     # Loading all markets into memory.
-    for index, market in enumerate(marketList):
-        marketFile = os.path.join('tickerData',market+'.txt')
-        data = pd.read_csv(marketFile,engine='c')
-        data.columns = map(str.strip,data.columns)
-        data.set_index('DATE', inplace = True)
+    for i, market in enumerate(marketList):
+        marketFile = os.path.join('tickerData', market+'.txt')
+        data = pd.read_csv(marketFile, engine='c')
+        data.columns = map(str.strip, data.columns)
+        fieldNames.update(list(data.columns.values))
+        data.set_index('DATE', inplace=True)
         data['DATE'] = data.index
 
-        for index, dataType in enumerate(dataToLoad):
+        for j, dataType in enumerate(dataToLoad):
             if dataType == 'p':
                 data.rename(columns={'p':'P'},inplace = True)
                 dataType = 'P'
 
-            if dataType != 'DATE' and not dataType in dataDict and dataType in data:
-                dataDict[dataType] = pd.DataFrame(index=DATE_Large,columns=marketList)
+            if dataType != 'DATE' and dataType not in dataDict and dataType in data:
+                dataDict[dataType] = pd.DataFrame(index=DATE_Large, columns=marketList)
                 dataDict[dataType][market] = data[dataType]
 
             elif dataType != 'DATE' and dataType in data:
                 dataDict[dataType][market] = data[dataType]
 
+    # get args that are not in requiredData and fieldsNames
+    # find out what has not been loaded
+    additionDataToLoad = dataToLoad.difference(requiredData.union(fieldNames))
+    for i, additionData in enumerate(additionDataToLoad):
+        dataFile = os.path.join('tickerData', additionData + '.txt')
+        data = pd.read_csv(dataFile, engine='c')
+        data.columns = map(str.strip, data.columns)
+        data.set_index('DATE', inplace=True)
+        data['DATE'] = data.index
+
+        for j, column in enumerate(data.columns):
+            if column != 'DATE':
+                if additionData not in dataDict:
+                    columns = set(data.columns)
+                    columns.remove('DATE')
+                    dataDict[additionData] = pd.DataFrame(index=DATE_Large, columns=columns)
+                dataDict[additionData][column] = data[column]
+
+    # fill the gap for additional data for the whole data range
+    for i, additionData in enumerate(additionDataToLoad):
+        dataDict[additionData][:] = fillnans(dataDict[additionData].values)
+
+    # drop rows in CLOSE if none of the markets have data on that date
     dataDict['CLOSE'].dropna(how='all', inplace=True)
 
     # In-sample date management.
@@ -126,8 +151,6 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
     else:
         dataDict['DATE'] = dataDict['CLOSE'].loc[beginInSampleInt:, :].index.values
 
-
-
     for index, dataType in enumerate(dataToLoad):
         if dataType != 'DATE' and dataType in dataDict:
             dataDict[dataType] = dataDict[dataType].loc[dataDict['DATE'], :]
@@ -141,11 +164,11 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
         dataDict['R'][np.isnan(dataDict['R'].astype(float))]=0.0
     if 'RINFO' in dataDict:
         dataDict['RINFO'][np.isnan(dataDict['RINFO'].astype(float))]=0.0
-        dataDict['RINFO']=dataDict['RINFO'].astype(float)
+        dataDict['RINFO'] = dataDict['RINFO'].astype(float)
     if 'P' in dataDict:
         dataDict['P'][np.isnan(dataDict['P'].astype(float))]=0.0
 
-    dataDict['CLOSE']=fillnans(dataDict['CLOSE'])
+    dataDict['CLOSE'] = fillnans(dataDict['CLOSE'])
 
     dataDict['OPEN'], dataDict['HIGH'], dataDict['LOW'] = fillwith(dataDict['OPEN'],dataDict['CLOSE']), fillwith(dataDict['HIGH'],dataDict['CLOSE']), fillwith(dataDict['LOW'],dataDict['CLOSE'])
 
@@ -198,7 +221,7 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
         tradingSystem = tradingSystem.replace('\\', '/')
 
     filePathFlag = False
-    if str(type(tradingSystem)) =="<type 'classobj'>" or str(type(tradingSystem)) =="<type 'type'>":
+    if str(type(tradingSystem)) == "<type 'classobj'>" or str(type(tradingSystem)) == "<type 'type'>":
         TSobject = tradingSystem()
         settings = TSobject.mySettings()
         tsName = str(tradingSystem)
@@ -244,7 +267,7 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
         print 'state variable is not a dict'
 
     # get boolean index of futures
-    futuresIx=np.array(map(lambda string:bool(re.match("F_",string)),settings['markets']))
+    futuresIx = np.array(map(lambda string:bool(re.match("F_",string)),settings['markets']))
 
     # get data fields and extract them.
     requiredData = set(['DATE','OPEN','HIGH', 'LOW', 'CLOSE', 'P','RINFO','p'])
@@ -305,7 +328,6 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
 
     slippageTemp = np.append(np.empty((1,nMarkets))*np.nan, ((dataDict['HIGH'][1:,:] - dataDict['LOW'][1:,:]) / dataDict['CLOSE'][:-1,:] ), axis=0) * settings['slippage']
     SLIPPAGE = np.nan_to_num(fillnans(slippageTemp))
-#    gaps[Rix] = 0
 
     if 'lookback' not in settings:
         startLoop=2
@@ -406,7 +428,7 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
     ret['returns'] = np.nan_to_num(returns).tolist()
 
     if errorlog:
-	    print 'Error: {}'.format(errorlog)
+        print 'Error: {}'.format(errorlog)
 
     if plotEquity:
         statistics = stats(fundequity)
@@ -561,7 +583,7 @@ def plotts(tradingSystem, equity,mEquity,exposure,settings,DATE,statistics,retur
                 Subplot_Equity.plot(DATEord[statistics['maxDDBegin']:statistics['maxDDEnd']+1],y_Equity[statistics['maxDDBegin']:statistics['maxDDEnd']+1],color='red',linewidth=0.5, label = 'Max Drawdown')
                 if not(np.isnan(statistics['maxTimeOffPeakBegin'])) and not(np.isnan(statistics['maxTimeOffPeak'])):
                     Subplot_Equity.plot(DATEord[(statistics['maxTimeOffPeakBegin']+1):(statistics['maxTimeOffPeakBegin']+statistics['maxTimeOffPeak']+2)],y_Equity[statistics['maxTimeOffPeakBegin']+1]*np.ones((statistics['maxTimeOffPeak']+1)),'r--',linewidth=2, label = 'Max Time Off Peak')
-                # Subplot_Equity.plot(DATEord[(statistics['maxTimeOffPeakBegin']+1):(statistics['maxTimeOffPeakBegin']+statistics['maxTimeOffPeak']+2)],y_Equity[statistics['maxTimeOffPeakBegin']+1]*np.ones((statistics['maxTimeOffPeak']+1)),'r--',linewidth=2, label = 'Max Time Off Peak')
+                    # Subplot_Equity.plot(DATEord[(statistics['maxTimeOffPeakBegin']+1):(statistics['maxTimeOffPeakBegin']+statistics['maxTimeOffPeak']+2)],y_Equity[statistics['maxTimeOffPeakBegin']+1]*np.ones((statistics['maxTimeOffPeak']+1)),'r--',linewidth=2, label = 'Max Time Off Peak')
             Subplot_Equity.set_ylabel('Performance')
 
         statsStr="Sharpe Ratio = {sharpe:.4f}\nSortino Ratio = {sortino:.4f}\n\nPerformance (%/yr) = {returnYearly:.4f}\nVolatility (%/yr)       = {volaYearly:.4f}\n\nMax Drawdown = {maxDD:.4f}\nMAR Ratio         = {mar:.4f}\n\n Max Time off peak =  {maxTimeOffPeak}\n\n\n\n\n\n".format(**statistics)
@@ -746,8 +768,6 @@ def plotts(tradingSystem, equity,mEquity,exposure,settings,DATE,statistics,retur
     TradingUI.mainloop()
 
 
-
-
 def stats(equityCurve):
     ''' calculates trading system statistics
 
@@ -813,9 +833,9 @@ def stats(equityCurve):
         mIx = np.argmin(underwater)
         maxDD = 1 - mi
         mX= np.where(highCurve[0:mIx-1] == np.max(highCurve[0:mIx-1]))
-#        highList = highCurve.copy()
-#        highList.tolist()
-#        mX= highList[0:mIx].index(np.max(highList[0:mIx]))
+        #        highList = highCurve.copy()
+        #        highList.tolist()
+        #        mX= highList[0:mIx].index(np.max(highList[0:mIx]))
         mX=mX[0][0]
         mar   = returnYearly / maxDD
 
@@ -906,11 +926,6 @@ def submit(tradingSystem, tsName):
     webbrowser.open_new_tab('https://www.quantiacs.com/quantnetsite/UploadSuccess.aspx?guid='+str(successPage))
 
 #    return True
-
-
-
-
-
 def computeFees(equityCurve, managementFee,performanceFee):
     ''' computes equity curve after fees
 
@@ -974,14 +989,14 @@ def fillnans(inArr):
         returns an array of the same size as inArr with the nan-values replaced by the most recent non-nan entry.
 
     '''
-    inArr=inArr.astype(float)
-    nanPos= np.where(np.isnan(inArr))
-    nanRow=nanPos[0]
-    nanCol=nanPos[1]
-    myArr=inArr.copy()
+    inArr = inArr.astype(float)
+    nanPos = np.where(np.isnan(inArr))
+    nanRow = nanPos[0]
+    nanCol = nanPos[1]
+    myArr = inArr.copy()
     for i in range(len(nanRow)):
-        if nanRow[i] >0:
-            myArr[nanRow[i],nanCol[i]]=myArr[nanRow[i]-1,nanCol[i]]
+        if nanRow[i] > 0:
+            myArr[nanRow[i], nanCol[i]] = myArr[nanRow[i]-1, nanCol[i]]
     return myArr
 
 

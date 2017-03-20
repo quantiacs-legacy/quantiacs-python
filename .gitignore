@@ -92,4 +92,4 @@ ENV/
 .idea/
 
 # market data
-*/tickerData/*
+*/tickerData
