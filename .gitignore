@@ -89,8 +89,7 @@ ENV/
 .ropeproject
 
 # pycharm project
-.idea/*
+.idea/
 
 # market data
 */tickerData
-
