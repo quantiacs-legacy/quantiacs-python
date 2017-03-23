@@ -74,7 +74,6 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
                 else:
                     data = urllib.urlopen('https://www.quantiacs.com/data/' +
                                           marketList[j]+'.txt').read()
-
                 with open(path, 'w') as dataFile:
                     dataFile.write(data)
                 print 'Downloading ' + marketList[j]
@@ -82,6 +81,8 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
             except:
                 print 'Unable to download ' + marketList[j]
                 marketList.remove(marketList[j])
+            finally:
+                dataFile.close()
 
     print 'Loading Data...'
     sys.stdout.flush()
@@ -97,7 +98,7 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
         data = pd.read_csv(marketFile, engine='c')
         data.columns = map(str.strip, data.columns)
         fieldNames.update(list(data.columns.values))
-        data.set_index('DATE', inplace=True)
+        data.set_index('DATE', inplace=True)    
         data['DATE'] = data.index
 
         for j, dataType in enumerate(dataToLoad):
@@ -112,16 +113,38 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
             elif dataType != 'DATE' and dataType in data:
                 dataDict[dataType][market] = data[dataType]
 
+
     # get args that are not in requiredData and fieldsNames
-    # find out what has not been loaded
     additionDataToLoad = dataToLoad.difference(requiredData.union(fieldNames))
+    additionDataFailed = set([])
     for i, additionData in enumerate(additionDataToLoad):
-        dataFile = os.path.join('tickerData', additionData + '.txt')
-        data = pd.read_csv(dataFile, engine='c')
+        filePath = os.path.join('tickerData', additionData + '.txt')
+        # check to see if data is present. If not (or refresh is true), download data from quantiacs.
+        if not os.path.isfile(filePath) or refresh:
+            try:
+                if False: #sys.version_info > (2,7,9):
+                    gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+                    data = urllib.urlopen('https://www.quantiacs.com/data/' +
+                                          additionData+'.txt',
+                                          context=gcontext).read()
+                else:
+                    data = urllib.urlopen('https://www.quantiacs.com/data/' +
+                                          additionData+'.txt').read()
+                with open(filePath, 'w') as dataFile:
+                    dataFile.write(data)
+                print 'Downloading ' + additionData
+            except:
+                print 'Unable to download ' + additionData
+                additionDataFailed.add(additionData)
+                continue
+            finally:
+                dataFile.close()
+
+        # read data from text file and load to memory
+        data = pd.read_csv(filePath, engine='c')
         data.columns = map(str.strip, data.columns)
         data.set_index('DATE', inplace=True)
         data['DATE'] = data.index
-
         for j, column in enumerate(data.columns):
             if column != 'DATE':
                 if additionData not in dataDict:
@@ -130,6 +153,7 @@ def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None
                     dataDict[additionData] = pd.DataFrame(index=DATE_Large, columns=columns)
                 dataDict[additionData][column] = data[column]
 
+    additionDataToLoad = additionDataToLoad.difference(additionDataFailed)
     # fill the gap for additional data for the whole data range
     for i, additionData in enumerate(additionDataToLoad):
         dataDict[additionData][:] = fillnans(dataDict[additionData].values)
