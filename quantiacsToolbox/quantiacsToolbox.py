@@ -261,6 +261,11 @@ def runts(tradingSystem, plotEquity=True, reloadData=False, state={}, sourceData
         tsFolder, tsName = os.path.split(filePath)
 
         try:
+            del sys.modules['tradingSystemModule']
+        except:
+            pass
+
+        try:
             TSobject = imp.load_source('tradingSystemModule', filePath)
         except Exception as e:
             print 'Error loading trading system'
@@ -1041,7 +1046,8 @@ def fillwith(field, lookup):
     nanCol=nanPos[1]
 
     for i in range(len(nanRow)):
-        out[nanRow[i],nanCol[i]] = lookup[nanRow[i]-1,nanCol[i]]
+        if nanRow[i] > 0:
+            out[nanRow[i], nanCol[i]] = lookup[nanRow[i] - 1, nanCol[i]]
 
     return out
 
