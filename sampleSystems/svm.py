@@ -1,3 +1,5 @@
+### Quantiacs Trading System Template
+# This program may take more than 10 minutes
 # import necessary Packages
 
 import numpy as np
@@ -5,14 +7,13 @@ from sklearn import svm
 
 
 def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, OI, P, R, RINFO, exposure, equity, settings):
-    '''
-    For 5 lookback days and 3 markets, CLOSE is a numpy array looks like
+    """
+    For 4 lookback days and 3 markets, CLOSE is a numpy array looks like
     [[ 12798.   11537.5   9010. ]
      [ 12822.   11487.5   9020. ]
      [ 12774.   11462.5   8940. ]
-     [ 13032.   11575.    9010. ]
      [ 12966.   11587.5   9220. ]]
-    '''
+    """
 
     # define helper function
     # use close price predict the trend of the next day
@@ -26,22 +27,24 @@ def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, OI, P, R, RINFO, exposure
 
         return clf.predict(CLOSE[-gap:].T)
 
-    nMarkets = CLOSE.shape[1]
-    gap = 5
+    nMarkets = len(settings['markets'])
+    gap = settings['gap']
 
     pos = np.zeros((1, nMarkets), dtype='float')
     for i in range(nMarkets):
         try:
             pos[0, i] = predict(CLOSE[:, i].reshape(-1, 1),
                                 gap, )
+
         # for NaN data set position to 0
         except ValueError:
             pos[0, i] = 0.
 
     return pos, settings
 
+
 def mySettings():
-    ''' Define your trading system settings here '''
+    """ Define your trading system settings here """
 
     settings = {}
 
@@ -56,6 +59,8 @@ def mySettings():
     settings['lookback'] = 252
     settings['budget'] = 10 ** 6
     settings['slippage'] = 0.05
+
+    settings['gap'] = 5
 
     return settings
 
