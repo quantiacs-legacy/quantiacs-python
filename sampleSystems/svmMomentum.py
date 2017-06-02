@@ -58,6 +58,6 @@ def mySettings():
 
 
 if __name__ == '__main__':
-    import currentToolbox as quantiacsToolbox
+    import quantiacsToolbox
 
     quantiacsToolbox.runts(__file__)
