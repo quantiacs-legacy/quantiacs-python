@@ -49,7 +49,7 @@ def mySettings():
 
     settings['lookback'] = 252
     settings['budget'] = 10 ** 6
-    settings['slippage'] = 0.00
+    settings['slippage'] = 0.05
 
     settings['gap'] = 20
     settings['dimension'] = 5

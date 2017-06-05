@@ -9,6 +9,7 @@ def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, OI, P, R, RINFO, exposure
         return sma, sma + 2 * std, sma - 2 * std
 
     nMarkets = len(settings['markets'])
+    threshold = settings['threshold']
     pos = np.zeros((1, nMarkets), dtype=np.float)
 
     for market in range(nMarkets):
@@ -17,9 +18,10 @@ def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, OI, P, R, RINFO, exposure
             currentPrice = CLOSE[-1, market]
 
             # buy when touch the lower band and sell when touch the upper band
-            if currentPrice >= upperBand:
+
+            if currentPrice >= upperBand + (upperBand - lowerBand) * threshold:
                 pos[0, market] = -1
-            elif currentPrice <= lowerBand:
+            elif currentPrice <= lowerBand - (upperBand - lowerBand) * threshold:
                 pos[0, market] = 1
 
         except ValueError:
@@ -42,10 +44,12 @@ def mySettings():
                            'F_YM']
 
     settings['beginInSample'] = '19900101'
-    settings['endInSample'] = '20060101'
+    settings['endInSample'] = '20170522'
     settings['lookback'] = 20
     settings['budget'] = 10 ** 6
-    settings['slippage'] = 0.00
+    settings['slippage'] = 0.05
+
+    settings['threshold'] = 0.4
 
     return settings
 
