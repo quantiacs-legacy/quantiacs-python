@@ -13,19 +13,13 @@ def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, OI, P, R, RINFO, exposure
     pos = np.zeros((1, nMarkets), dtype=np.float)
 
     for market in range(nMarkets):
-        try:
-            sma, upperBand, lowerBand = bollingerBands(CLOSE[:, market])
-            currentPrice = CLOSE[-1, market]
+        sma, upperBand, lowerBand = bollingerBands(CLOSE[:, market])
+        currentPrice = CLOSE[-1, market]
 
-            # buy when touch the lower band and sell when touch the upper band
-
-            if currentPrice >= upperBand + (upperBand - lowerBand) * threshold:
-                pos[0, market] = -1
-            elif currentPrice <= lowerBand - (upperBand - lowerBand) * threshold:
-                pos[0, market] = 1
-
-        except ValueError:
-            pos[0, market] = .0
+        if currentPrice >= upperBand + (upperBand - lowerBand) * threshold:
+            pos[0, market] = -1
+        elif currentPrice <= lowerBand - (upperBand - lowerBand) * threshold:
+            pos[0, market] = 1
 
     return pos, settings
 
