@@ -21,6 +21,7 @@ def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, OI, P, R, RINFO, exposure
         lookback = CLOSE.shape[0]
         X = np.concatenate([CLOSE[i:i + gap] for i in range(lookback - gap)], axis=1).T
         y = np.sign((CLOSE[gap:lookback] - CLOSE[gap - 1:lookback - 1]).T[0])
+        y[y==0] = 1
 
         clf = svm.SVC()
         clf.fit(X, y)

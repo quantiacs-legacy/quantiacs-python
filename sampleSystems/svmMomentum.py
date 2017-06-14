@@ -7,6 +7,7 @@ def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, OI, P, R, RINFO, exposure
     def predict(momentum, CLOSE, lookback, gap, dimension):
         X = np.concatenate([momentum[i:i + dimension] for i in range(lookback - gap - dimension)], axis=1).T
         y = np.sign((CLOSE[dimension+gap:] - CLOSE[dimension+gap-1:-1]).T[0])
+        y[y==0] = 1
 
         clf = svm.SVC()
         clf.fit(X, y)
