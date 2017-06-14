@@ -4,6 +4,7 @@
 
 import numpy as np
 from sklearn import linear_model
+from sklearn.preprocessing import PolynomialFeatures
 
 
 def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, OI, P, R, RINFO, exposure, equity, settings):
@@ -17,11 +18,12 @@ def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, OI, P, R, RINFO, exposure
 
     pos = np.zeros(nMarkets, dtype=np.float)
 
+    poly = PolynomialFeatures(degree=dimension)
     for market in range(nMarkets):
-        reg = linear_model.LinearRegression(normalize=True)
+        reg = linear_model.LinearRegression()
         try:
-            reg.fit(np.dstack((np.arange(lookback, dtype=np.float) ** i for i in range(dimension)))[0], CLOSE[:, market])
-            trend = (reg.predict(np.array([[lookback ** i for i in range(dimension)]])) - CLOSE[-1, market]) / CLOSE[-1, market]
+            reg.fit(poly.fit_transform(np.arange(lookback).reshape(-1, 1)), CLOSE[:, market])
+            trend = (reg.predict(poly.fit_transform(np.array([[lookback]]))) - CLOSE[-1, market]) / CLOSE[-1, market]
 
             if abs(trend[0]) < threshold:
                 trend[0] = 0
@@ -53,7 +55,7 @@ def mySettings():
     settings['slippage'] = 0.05
 
     settings['threshold'] = 0.2
-    settings['dimension'] = 4
+    settings['dimension'] = 3
 
     return settings
 

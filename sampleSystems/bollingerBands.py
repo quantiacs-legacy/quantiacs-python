@@ -5,7 +5,7 @@ def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, OI, P, R, RINFO, exposure
 
     def bollingerBands(a, n=20):
         sma = np.nansum(a[-n:]) / n
-        std = np.std(a[-n:])
+        std = np.std(a[-n:], ddof=1)
         return sma, sma + 2 * std, sma - 2 * std
 
     nMarkets = len(settings['markets'])
