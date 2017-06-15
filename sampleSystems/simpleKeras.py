@@ -72,6 +72,7 @@ def mySettings():
     settings['budget'] = 1000000
     settings['lookback'] = 504
     settings['beginInSample'] = '20140101'
+    settings['endInSample'] = '20170101'
 
     return settings
 
