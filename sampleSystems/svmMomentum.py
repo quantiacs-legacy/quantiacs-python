@@ -1,46 +1,37 @@
-### Quantiacs Trading System Template
-# This program may take more than 10 minutes
-# import necessary Packages
-
 import numpy as np
 from sklearn import svm
 
 
 def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, OI, P, R, RINFO, exposure, equity, settings):
-    """
-    For 4 lookback days and 3 markets, CLOSE is a numpy array looks like
-    [[ 12798.   11537.5   9010. ]
-     [ 12822.   11487.5   9020. ]
-     [ 12774.   11462.5   8940. ]
-     [ 12966.   11587.5   9220. ]]
-    """
 
-    # define helper function
-    # use close price predict the trend of the next day
-    def predict(CLOSE, gap):
-        lookback = CLOSE.shape[0]
-        X = np.concatenate([CLOSE[i:i + gap] for i in range(lookback - gap)], axis=1).T
-        y = np.sign((CLOSE[gap:lookback] - CLOSE[gap - 1:lookback - 1]).T[0])
+    def predict(momentum, CLOSE, lookback, gap, dimension):
+        X = np.concatenate([momentum[i:i + dimension] for i in range(lookback - gap - dimension)], axis=1).T
+        y = np.sign((CLOSE[dimension+gap:] - CLOSE[dimension+gap-1:-1]).T[0])
         y[y==0] = 1
 
         clf = svm.SVC()
         clf.fit(X, y)
 
-        return clf.predict(CLOSE[-gap:].T)
+        return clf.predict(momentum[-dimension:].T)
 
     nMarkets = len(settings['markets'])
+    lookback = settings['lookback']
+    dimension = settings['dimension']
     gap = settings['gap']
 
-    pos = np.zeros((1, nMarkets), dtype='float')
-    for i in range(nMarkets):
+    pos = np.zeros((1, nMarkets), dtype=np.float)
+
+    momentum = (CLOSE[gap:, :] - CLOSE[:-gap, :]) / CLOSE[:-gap, :]
+
+    for market in range(nMarkets):
         try:
-            pos[0, i] = predict(CLOSE[:, i].reshape(-1, 1),
-                                gap, )
-
-        # for NaN data set position to 0
+            pos[0, market] = predict(momentum[:, market].reshape(-1, 1),
+                                     CLOSE[:, market].reshape(-1, 1),
+                                     lookback,
+                                     gap,
+                                     dimension)
         except ValueError:
-            pos[0, i] = 0.
-
+            pos[0, market] = .0
     return pos, settings
 
 
@@ -61,12 +52,13 @@ def mySettings():
     settings['budget'] = 10 ** 6
     settings['slippage'] = 0.05
 
-    settings['gap'] = 5
+    settings['gap'] = 20
+    settings['dimension'] = 5
 
     return settings
 
 
-# Evaluate trading system defined in current file.
 if __name__ == '__main__':
     import quantiacsToolbox
-    results = quantiacsToolbox.runts(__file__)
+
+    quantiacsToolbox.runts(__file__)
