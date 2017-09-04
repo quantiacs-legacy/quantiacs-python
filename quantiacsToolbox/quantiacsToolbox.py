@@ -38,7 +38,7 @@ try:
     from tkinter import ttk
 except ImportError:
     import Tkinter as tk
-    from Tkinter import ttk
+    import ttk
 
 def loadData(marketList=None, dataToLoad=None, refresh=False, beginInSample=None, endInSample=None, dataDir = 'tickerData'):
     ''' prepares and returns market data for specified markets.
