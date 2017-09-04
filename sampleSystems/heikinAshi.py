@@ -34,7 +34,7 @@ def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, settings):
     settings['lastP'] = p;
     
 #    Displays Date in console while it's being processed
-    print 'Processing %s' % DATE[-1]
+    print('Processing %s' % DATE[-1])
     
     return p, settings
 
