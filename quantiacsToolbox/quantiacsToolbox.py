@@ -928,7 +928,7 @@ def submit(tradingSystem, tsName):
         returns True if upload was successful, False otherwise.
 
     '''
-    from version import __version__
+    from quantiacsToolbox.version import __version__
 
 
     if os.path.isfile(tradingSystem) and os.access(tradingSystem, os.R_OK):
@@ -1077,7 +1077,7 @@ def updateCheck():
         returns False if version is the same
     '''
 
-    from version import __version__
+    from quantiacsToolbox.version import __version__
     updateStr = ''
     try:
         toolboxJson = urllib.urlopen('https://pypi.python.org/pypi/quantiacsToolbox/json')
