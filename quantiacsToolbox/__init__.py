@@ -1,5 +1,6 @@
-import pip
-moduleList = [i.key for i in pip.get_installed_distributions()]
+import pkg_resources
 
-if 'quantiacstoolbox' in moduleList:
+try:
+    pkg_resources.get_distribution("quantiacstoolbox")
+except DistributionNotFound:
     from .quantiacsToolbox import runts, loadData, plotts, stats, submit, computeFees, updateCheck
