@@ -8,8 +8,8 @@ def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, exposure, equity, setting
 
     nMarkets = CLOSE.shape[1]
 
-    periodLonger = 200
-    periodShorter = 40
+    periodLonger = 200 #%[100:10:200]#
+    periodShorter = 40 #%[40:10:100]#
 
     # Calculate Simple Moving Average (SMA)
     smaLongerPeriod = numpy.nansum(CLOSE[-periodLonger:, :], axis=0)/periodLonger
@@ -59,5 +59,7 @@ def mySettings():
 
 # Evaluate trading system defined in current file.
 if __name__ == '__main__':
-    import quantiacsToolbox
-    results = quantiacsToolbox.runts(__file__)
+    from quantiacsToolbox.quantiacsToolbox import runts, optimize
+
+    #results = runts(__file__)
+    optimize(__file__)
