@@ -713,6 +713,7 @@ def runts(tradingSystem=None, plotEquity=True, reloadData=False, state={}, sourc
             print(e)
             print(traceback.format_exc())
             return
+
         try:
             settings = TSobject.mySettings()
         except Exception as e:
@@ -805,18 +806,27 @@ def runts(tradingSystem=None, plotEquity=True, reloadData=False, state={}, sourc
     if state['resume']:
         if 'evalData' in state:
             ixOld = dataDict['DATE'] <= state['evalData']['evalDate']
-            evalData = state['evalData']
+            #evalData = state['evalData']
 
-            ixMapExposure = np.concatenate(([False, False], ixOld), axis=0)
+            #ixMapExposure = np.concatenate(([False, False], ixOld), axis=0)
             dataDict['equity'][ixOld, :] = state['evalData']['marketEquity']
-            dataDict['exposure'][ixMapExposure, :] = state['evalData']['marketExposure']
+            #dataDict['exposure'][ixMapExposure, :] = state['evalData']['marketExposure']
+            dataDict['exposure'][ixOld, :] = state['evalData']['marketExposure']
             dataDict['fundEquity'][ixOld, :] = state['evalData']['fundEquity']
 
             startLoop = np.shape(state['evalData']['fundDate'])[0]
             endLoop = np.shape(dataDict['DATE'])[0]
 
-            print("Resuming", tsName, "| computing", endLoop - startLoop + 1, "new days")
-            settings = evalData['settings']
+            for t in range(0, startLoop):
+                if np.any(Rix[t, :]):
+                    delta = np.tile(dataDict['RINFO'][t, Rix[t, :]], (t, 1))
+                    dataDict['CLOSE'][0:t, Rix[t, :]] = dataDict['CLOSE'][0:t, Rix[t, :]].copy() + delta.copy()
+                    dataDict['OPEN'][0:t, Rix[t, :]] = dataDict['OPEN'][0:t, Rix[t, :]].copy() + delta.copy()
+                    dataDict['HIGH'][0:t, Rix[t, :]] = dataDict['HIGH'][0:t, Rix[t, :]].copy() + delta.copy()
+                    dataDict['LOW'][0:t, Rix[t, :]] = dataDict['LOW'][0:t, Rix[t, :]].copy() + delta.copy()
+
+            print("Resuming", tsName, "| computing", endLoop - startLoop, "new days")
+            settings = state['evalData']['settings']
 
     t0 = time.time()
 

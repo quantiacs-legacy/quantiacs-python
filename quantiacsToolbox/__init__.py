@@ -1,6 +1,2 @@
-import pkg_resources
-
-moduleList = [d for d in pkg_resources.working_set]
-
-if 'quantiacstoolbox' in moduleList:
-    from .quantiacsToolbox import runts, loadData, plotts, stats, submit, computeFees, updateCheck
+name = 'quantiacsToolbox'
+from .quantiacsToolbox import runts, optimize, loadData, plotts, stats, submit, computeFees, updateCheck
