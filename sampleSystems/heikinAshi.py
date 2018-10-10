@@ -102,5 +102,5 @@ def executeP(L, S, L_e, S_e, oldP):
     
 # Evaluate trading system defined in current file.
 if __name__ == '__main__':
-    import quantiacsToolbox
-    results = quantiacsToolbox.runts(__file__)
+    from quantiacsToolbox import runts
+    results = runts(__file__)

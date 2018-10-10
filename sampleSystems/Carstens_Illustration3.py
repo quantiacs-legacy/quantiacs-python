@@ -61,5 +61,5 @@ def mySettings():
     return settings
 
 if __name__=='__main__':
-    import quantiacsToolbox
-    results = quantiacsToolbox.runts(__file__)
+    from quantiacsToolbox import runts
+    results = runts(__file__)

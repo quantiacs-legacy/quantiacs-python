@@ -40,7 +40,7 @@ def createAndTrain(DATE, CLOSE, settings):
 def myTradingSystem(DATE, CLOSE, exposure, equity, settings):
     ''' This system uses mean reversion techniques to allocate capital into the desired equities '''
     lookBack = settings['lookback']
-    if False == settings.has_key('model'):
+    if 'model' not in settings:
         createAndTrain(DATE[:lookBack - 2], CLOSE[:lookBack - 2], settings)
 
     model = settings['model']
@@ -79,8 +79,8 @@ def mySettings():
 
 # Evaluate trading system defined in current file.
 if __name__ == '__main__':
-    import quantiacsToolbox
+    from quantiacsToolbox import runts
+
     np.random.seed(98274534)
 
-    results = quantiacsToolbox.runts(__file__, True)
-    print('done')
+    results = runts(__file__)
