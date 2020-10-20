@@ -1,10 +1,10 @@
 ### Quantiacs Trading System Template
 # This program may take several minutes
 # import necessary Packages
-
-import numpy as np
-from sklearn import linear_model
-from sklearn.preprocessing import PolynomialFeatures
+def main():
+    import numpy as np
+    from sklearn import linear_model
+    from sklearn.preprocessing import PolynomialFeatures
 
 
 def myTradingSystem(DATE, OPEN, HIGH, LOW, CLOSE, VOL, OI, P, R, RINFO, exposure, equity, settings):
