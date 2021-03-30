@@ -29,6 +29,8 @@ from mpl_toolkits.mplot3d import Axes3D, proj3d
 
 import pandas as pd
 import numpy as np
+#new addition
+np.seterr(divide='ignore')
 
 try:
     import tkinter as tk
